@@ -32,13 +32,11 @@ public class GenericMySQLProbe implements Sensor {
     public Measurement getMeasurement() throws MeasurementNotAvailableException {
         try{
             Connection conn = null;
-            Statement stmt = null;
 
-            Class.forName(JDBC_DRIVER);
+            Class driver_class = Class.forName(JDBC_DRIVER);
+            Driver driver = (Driver) driver_class.newInstance();
+            DriverManager.registerDriver(driver);
             conn = DriverManager.getConnection(dbUri, username, password);
-
-            stmt.close();
-            conn.close();
 
             PreparedStatement preparedStatement = conn.prepareStatement(statement);
 
@@ -46,8 +44,14 @@ public class GenericMySQLProbe implements Sensor {
 
             Double value = Double.valueOf(resultSet.getObject(0).toString());
 
+            preparedStatement.close();
+            conn.close();
+
             return new MeasurementImpl(System.currentTimeMillis(), value);
-        } catch(ClassNotFoundException | SQLException e){
+        } catch(IllegalAccessException |
+                InstantiationException |
+                ClassNotFoundException |
+                SQLException e){
             throw new MeasurementNotAvailableException(e);
         }
     }
