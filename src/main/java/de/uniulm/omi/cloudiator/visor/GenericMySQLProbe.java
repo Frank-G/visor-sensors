@@ -42,12 +42,16 @@ public class GenericMySQLProbe implements Sensor {
 
             final ResultSet resultSet = preparedStatement.executeQuery();
 
-            Double value = Double.valueOf(resultSet.getObject(0).toString());
+            if(resultSet.next()){
+                Double value = resultSet.getDouble(1);
 
-            preparedStatement.close();
-            conn.close();
+                preparedStatement.close();
+                conn.close();
 
-            return new MeasurementImpl(System.currentTimeMillis(), value);
+                return new MeasurementImpl(System.currentTimeMillis(), value);
+            } else {
+                throw new MeasurementNotAvailableException("resultSet has no next value");
+            }
         } catch(IllegalAccessException |
                 InstantiationException |
                 ClassNotFoundException |
